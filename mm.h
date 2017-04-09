@@ -10,9 +10,13 @@
 
 /* TODO - Fill this in */
 typedef struct {
-
-
-
+//first we store a ptr to the pool of dynamic memory
+  void * mm_pool;
+  int num_chunks;
+  int chunk_size;
+  int act_chunk_size;
+//top of available stack chunks
+  int header;
 } mm_t;
 
 /* TODO - Implement these in mm.c */
