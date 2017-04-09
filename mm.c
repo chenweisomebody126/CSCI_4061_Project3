@@ -1,5 +1,5 @@
 #include <stdio.h>
-
+#include <stdlib.h>
 #include "mm.h"
 
 /* Return usec */
@@ -23,7 +23,7 @@ allocate the memeory pool
 allocate the memory stack consists of chunks (idx, ptr_mm_chunck)
 */
 int mm_init(mm_t *mm, int hm, int sz) {
-  if (hm<= NUM_CHUNKS && sz<= CHUNK_SIZE){
+  if (mm!= NULL){
     //initialize the pool of dynamic memeory
     mm->num_chunks = hm;
     mm->chunk_size =sz;
@@ -41,15 +41,16 @@ int mm_init(mm_t *mm, int hm, int sz) {
       //set the current chunk_idx
       *(int*) curr_chunk_ptr= chunk_idx;
       //set the next available chunk idx
-      *(int*) curr_chunk_ptr+4 = chunk_idx+1;
-      curr_chunk_ptr =curr_chunk_ptr+ act_chunk_size;
+      *(int*) (curr_chunk_ptr+4) = chunk_idx+1;
+      curr_chunk_ptr =curr_chunk_ptr+ mm->act_chunk_size;
     }
-    *(int*) curr_chunk_ptr-act_chunk_size +4 =-1;
-  else{
-    exit(-1);
-    fprintf(stderr, "The size of memory allocation requested is larger than %d bytes\n", CHUNK_SIZE*NUM_CHUNKS);
+    *(int*) (curr_chunk_ptr-mm->act_chunk_size +4) =-1;
+    return 0;  /* TODO - return the right value */
   }
-  return 0;  /* TODO - return the right value */
+  else{
+    fprintf(stderr, "The size of memory allocation requested is larger than %d bytes\n", CHUNK_SIZE*NUM_CHUNKS);
+    exit(-1);
+  }
 }
 
 /*
@@ -63,7 +64,7 @@ void *mm_get(mm_t *mm) {
   }
   //obtain the next available chunk and reset the header
   void* alloc_chunk = mm->mm_pool + mm->act_chunk_size*mm->header+4*2;
-  mm->header = mm->mm_pool+ mm->act_chunk_size*mm->header+4;
+  mm->header = *(int*) (mm->mm_pool+ mm->act_chunk_size*mm->header+4);
   return alloc_chunk;
 }
 
@@ -72,8 +73,8 @@ TODO - Implement to give back ‘chunk’ to the memory manager, don’t free it
 */
 void mm_put(mm_t *mm, void *chunk) {
   //"insert" received chunk, then update received chunk's next linked chunk as well as the header
-  *(int*) chunk-4 = *(int*)mm->mm_pool + mm->header*mm->act_chunk_size;
-  mm->header = *(int*) chunk-8;
+  *(int*) (chunk-4) = *(int*) (mm->mm_pool + mm->header*mm->act_chunk_size);
+  mm->header = *(int*) (chunk-8);
 }
 
 /*
