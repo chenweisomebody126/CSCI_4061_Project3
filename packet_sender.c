@@ -4,7 +4,7 @@
 
 static int pkt_cnt = 0;     /* how many packets have been sent for current message */
 static int pkt_total = 1;   /* how many packets to send send for the message */
-static int msqid = -1; /* id of the message queue */
+static int msqid = -1;  /* id of the message queue */
 static int receiver_pid; /* pid of the receiver */
 
 /*
@@ -12,7 +12,7 @@ static int receiver_pid; /* pid of the receiver */
    The number of packets for the current message are decided randomly.
    Each packet has a how_many field which denotes the number of packets in the current message.
    Each packet is string of 3 characters. All 3 characters for given packet are the same.
-   For example, the message with 3 packets will be aaabbbccc. But these packets will be sent out order.
+   For example, the message with 3 packets will be aaabbbccc. But these packets will be sent out of order.
    So, message aaabbbccc can be sent as bbb -> aaa -> ccc
    */
 static packet_t get_packet() {
@@ -44,7 +44,7 @@ static packet_t get_packet() {
         break;
       }
       i = (i + 1) % how_many;
-    } 
+    }
 
   }
   pkt.how_many = how_many;
@@ -73,9 +73,16 @@ static void packet_sender(int sig) {
   pkt_cnt++;
 
   // TODO Create a packet_queue_msg for the current packet.
+  packet_queue_msg* pkt_msg;
+  pkt_msg->pkt =  pkt;
   // TODO send this packet_queue_msg to the receiver. Handle any error appropriately.
+  if (msgsnd(msgid, (void*) pkt_msg,sizeof(packet_queue_msg), 0 )==-1){
+    perror("msgsnd");
+    exit(-1);
+  }
   // TODO send SIGIO to the receiver if message sending was successful.
-  
+  kill(receiver_pid, SIGIO);
+  return;
 }
 
 int main(int argc, char **argv) {
@@ -91,29 +98,42 @@ int main(int argc, char **argv) {
   int i;
 
   struct itimerval interval;
-  struct sigaction act;           
+  struct sigaction act;
 
-  /* TODO Create a message queue */ 
- 
+  /* TODO Create a message queue */
+  if (msgid =msgget((key_t) 1234, 06660| IPC_CREAT )==-1){
+    perror;
+    exit();
+  }
   /*  TODO read the receiver pid from the queue and store it for future use*/
-  
+  pid_queue_msg* pid_msg;
+  if ((msgrcv(msgid, (void *) pid_msg, sizeof(pid_queue_msg), 0))==-1){
+    eixt();
+  }
+  receiver_pid = pid_msg->pid;
+
   printf("Got pid : %d\n", receiver_pid);
- 
+
   /* TODO - set up alarm handler -- mask all signals within it */
   /* The alarm handler will get the packet and send the packet to the receiver. Check packet_sender();
    * Don't care about the old mask, and SIGALRM will be blocked for us anyway,
    * but we want to make sure act is properly initialized.
    */
-
-  /*  
+   sigfillset(&act.sa_mask);
+   act.sa_handler = packet_sender;
+   sigaction(SIGALARM, &act, NULL);
+  /*
    * TODO - turn on alarm timer ...
    * use  INTERVAL and INTERVAL_USEC for sec and usec values
   */
-
-
+  interval.it_interval.tv_sec = 1;
+  interval.it_interval.tv_usec =0;
+  interval.it_value.tv_sec = 0;
+  interval.it_value.tv_usec = 100;
   /* And the timer */
+  setitimer(ITIMER_REAL, &interval, NULL);
 
-  /* NOTE: the below code wont run now as you have not set the SIGALARM handler. Hence, 
+  /* NOTE: the below code wont run now as you have not set the SIGALARM handler. Hence,
      set up the SIGALARM handler and the timer first. */
   for (i = 1; i <= k; i++) {
     printf("==========================%d\n", i);
