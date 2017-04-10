@@ -23,7 +23,7 @@ allocate the memeory pool
 allocate the memory stack consists of chunks (idx, ptr_mm_chunck)
 */
 int mm_init(mm_t *mm, int hm, int sz) {
-  if (mm!= NULL){
+  if (mm != NULL){
     //initialize the pool of dynamic memeory
     mm->num_chunks = hm;
     mm->chunk_size =sz;
@@ -73,7 +73,7 @@ TODO - Implement to give back ‘chunk’ to the memory manager, don’t free it
 */
 void mm_put(mm_t *mm, void *chunk) {
   //"insert" received chunk, then update received chunk's next linked chunk as well as the header
-  *(int*) (chunk-4) = *(int*) (mm->mm_pool + mm->header*mm->act_chunk_size);
+  *(int*) (chunk-4) =  mm->header;
   mm->header = *(int*) (chunk-8);
 }
 
@@ -82,6 +82,7 @@ TODO - Implement to release all memory back to the system
 */
 void mm_release(mm_t *mm) {
   free(mm->mm_pool);
+  free(mm);
 }
 
 /*
