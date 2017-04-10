@@ -23,7 +23,8 @@ allocate the memeory pool
 allocate the memory stack consists of chunks (idx, ptr_mm_chunck)
 */
 int mm_init(mm_t *mm, int hm, int sz) {
-  if (mm != NULL){
+fprintf(stderr,"\n inside mm_init"); 
+ if (mm != NULL){
     //initialize the pool of dynamic memeory
     mm->num_chunks = hm;
     mm->chunk_size =sz;
@@ -35,6 +36,8 @@ int mm_init(mm_t *mm, int hm, int sz) {
     3) memory of chunk_size to allocate
     */
     mm->act_chunk_size =sz+4*2;
+//mm->memory_ptr  = (void*)malloc(mm->number_of_chunks * mm->size_of_chunks);
+mm->mm_pool  = (void*)malloc(mm->num_chunks * mm->act_chunk_size);
     void* curr_chunk_ptr = mm->mm_pool;
     int chunk_idx= 0;
     for (chunk_idx; chunk_idx < mm->num_chunks ;chunk_idx++){
