@@ -116,12 +116,12 @@ int main(int argc, char **argv) {
     exit(-1);
   }
   /*  TODO read the receiver pid from the queue and store it for future use*/
-  pid_queue_msg pid_msg;
+  pid_queue_msg* pid_msg;
   if ((msgrcv(msqid, (void *) &pid_msg, sizeof(pid_queue_msg), QUEUE_MSG_TYPE,0660))==-1){
     fprintf(stderr, "failed to receive pkt message from message queue\n");
     exit(-1);
   }
-  receiver_pid = pid_msg.pid;
+  receiver_pid = pid_msg->pid;
 
   printf("Got pid : %d\n", receiver_pid);
 
