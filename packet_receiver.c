@@ -31,7 +31,7 @@ static void packet_handler(int sig) {
   if ((chunk = mm_get(&mm))==NULL){
       fprintf(stderr, "Failed to get memory chunk from memory manager.\n");
   }
-
+  fprintf(stderr, "Got mem chunk.\n");
 
   // TODO get the "packet_queue_msg" from the queue.
   if((msgrcv(msqid, (void*)&msg_pkt, sizeof(packet_queue_msg), QUEUE_MSG_TYPE, 0))==-1){
@@ -42,10 +42,15 @@ static void packet_handler(int sig) {
   // TODO extract the packet from "packet_queue_msg" and store it in the memory from memory manager
   pkt = msg_pkt.pkt;
   pkt_total = pkt.how_many;
+  int packet_num = pkt.which;
   pkt_cnt++;
   message.num_packets = pkt_cnt;
-  memcpy(chunk, &pkt, sizeof(packet_t));
-  message.data[pkt.which] = chunk;
+  //memcpy(chunk, &pkt.data, sizeof(data_t));
+  memcpy(chunk, &pkt.data, sizeof(PACKET_SIZE));
+
+  message.data[packet_num] = chunk;
+  fprintf(stderr, "pkt is:  data= %s \n", pkt.data);
+
 }
 
 /*
@@ -115,7 +120,7 @@ fprintf(stderr, "Key for queue is %d\n", key );
   if (sigaction(SIGIO, &act, NULL)<0){
     fprintf(stderr, "Failed to set SIGIO. %s\n", strerror(errno));
   }
-
+fprintf(stderr, "SIGIO handler setup.\n");
 
   for (i = 1; i <= k; i++) {
     while (pkt_cnt < pkt_total) {

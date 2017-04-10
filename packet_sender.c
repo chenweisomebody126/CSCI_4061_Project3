@@ -71,6 +71,7 @@ static void packet_sender(int sig) {
   packet_t pkt;
 
   pkt = get_packet();
+  fprintf(stderr, "%s\n", pkt.data);
   // temp is just used for temporarily printing the packet.
   char temp[PACKET_SIZE + 2];
   strcpy(temp, pkt.data);
@@ -79,11 +80,11 @@ static void packet_sender(int sig) {
   pkt_cnt++;
 
   // TODO Create a packet_queue_msg for the current packet.
-  packet_queue_msg* pkt_msg;
-  pkt_msg->pkt =  pkt;
-  pkt_msg->mtype = QUEUE_MSG_TYPE;
+  packet_queue_msg pkt_msg;
+  pkt_msg.pkt =  pkt;
+  pkt_msg.mtype = QUEUE_MSG_TYPE;
   // TODO send this packet_queue_msg to the receiver. Handle any error appropriately.
-  if (msgsnd(msqid, (void*) pkt_msg,sizeof(packet_queue_msg),0 )==-1){
+  if (msgsnd(msqid, (void*)&pkt_msg,sizeof(packet_queue_msg),0)==-1){
     fprintf(stderr, "fail to send packet_queue_msg to message queue \n");
     exit(-1);
   }
