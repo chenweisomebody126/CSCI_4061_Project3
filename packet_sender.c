@@ -3,7 +3,7 @@
 #include "packet.h"
 
 static int pkt_cnt = 0;     /* how many packets have been sent for current message */
-static int pkt_total = 1;   /* how many packets to send send for the message */
+static int pkt_total = 1;   /* how many packets to send for the message */
 static int msqid = -1;  /* id of the message queue */
 static int receiver_pid; /* pid of the receiver */
 
@@ -75,13 +75,17 @@ static void packet_sender(int sig) {
   // TODO Create a packet_queue_msg for the current packet.
   packet_queue_msg* pkt_msg;
   pkt_msg->pkt =  pkt;
+  pkt_msg->mtype = QUEUE_MSG_TYPE;
   // TODO send this packet_queue_msg to the receiver. Handle any error appropriately.
-  if (msgsnd(msgid, (void*) pkt_msg,sizeof(packet_queue_msg), 0 )==-1){
-    perror("msgsnd");
+  if (msgsnd(msqid, (void*) pkt_msg,sizeof(packet_queue_msg),0 )==-1){
+    fprintf(stderr, "fail to send packet_queue_msg to message queue \n");
     exit(-1);
   }
   // TODO send SIGIO to the receiver if message sending was successful.
-  kill(receiver_pid, SIGIO);
+  if (kill(receiver_pid, SIGIO)==-1){
+    fprintf(stderr, "fail to send SIGIO to receiver_pid %d \n", receiver_pid);
+    exit(-1);
+  }
   return;
 }
 
@@ -101,14 +105,15 @@ int main(int argc, char **argv) {
   struct sigaction act;
 
   /* TODO Create a message queue */
-  if (msgid =msgget((key_t) 1234, 06660| IPC_CREAT )==-1){
-    perror;
-    exit();
+  if (msqid =msgget((key_t) key, 06660| IPC_CREAT )==-1){
+    fprintf(stderr, "fail to creat a message queue with key %d\n", key);
+    exit(-1);
   }
   /*  TODO read the receiver pid from the queue and store it for future use*/
   pid_queue_msg* pid_msg;
-  if ((msgrcv(msgid, (void *) pid_msg, sizeof(pid_queue_msg), 0))==-1){
-    eixt();
+  if ((msgrcv(msqid, (void *) pid_msg, sizeof(pid_queue_msg), 1,0))==-1){
+    fprintf(stderr, "fail to receive pkt message from message queue\n");
+    exit(-1);
   }
   receiver_pid = pid_msg->pid;
 
