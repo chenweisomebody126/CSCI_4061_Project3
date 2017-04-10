@@ -7,11 +7,10 @@ static void timer_example_ours() {
   int i;
   /* start timer */
   //gettimeofday (&time_s, NULL);
-  mm_t *mm_partA;
-  mm_partA = (mm_t *)malloc(sizeof(mm_t));
- gettimeofday (&time_s, NULL);
-  mm_init(mm_partA,NUM_CHUNKS,CHUNK_SIZE);
- // gettimeofday (&time_s, NULL);
+  mm_t mm_partA;
+  //mm_partA = (mm_t *)malloc(sizeof(mm_t));
+  mm_init(&mm_partA,NUM_CHUNKS,CHUNK_SIZE);
+  gettimeofday (&time_s, NULL);
   for (i=0;i<NUM_CHUNKS;i++){
     arr[i]=mm_get(mm_partA);
   }
@@ -23,9 +22,7 @@ static void timer_example_ours() {
 
   fprintf(stderr, "Time taken by mm = %f msec\n",
           comp_time(time_s, time_e) / 1000.0);
-mm_release(mm_partA);
-//free(mm_partA->memory_ptr);
-//free(mm_partA);
+free(mm_partA->memory_ptr);
 //free(arr);
 }
 static void timer_example_malloc() {

@@ -1,6 +1,10 @@
 #include <stdio.h>
-#include <stdlib.h>
+
 #include "mm.h"
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+
 
 /* Return usec */
 double comp_time(struct timeval time_s, struct timeval time_e) {
@@ -17,93 +21,69 @@ double comp_time(struct timeval time_s, struct timeval time_e) {
   return elap;
 }
 
-/*
-TODO - Implement.  Return 0 for success, or -1 and set errno on fail.
-allocate the memeory pool
-allocate the memory stack consists of chunks (idx, ptr_mm_chunck)
-*/
+/* TODO - Implement.  Return 0 for success, or -1 and set errno on fail. */
 int mm_init(mm_t *mm, int hm, int sz) {
-fprintf(stderr,"\n inside mm_init"); 
- if (mm != NULL){
-    //initialize the pool of dynamic memeory
-    mm->num_chunks = hm;
-    mm->chunk_size =sz;
-    mm->header = 0;
-    /*
-    Actual chunk consists of
-    1) 4 bytes int indicating current chunk_idx
-    2) 4 bytes int indicating next available chunk_idx
-    3) memory of chunk_size to allocate
-    */
-    mm->act_chunk_size =sz+4*2;
-//mm->memory_ptr  = (void*)malloc(mm->number_of_chunks * mm->size_of_chunks);
-mm->mm_pool  = (void*)malloc(mm->num_chunks * mm->act_chunk_size);
-    void* curr_chunk_ptr = mm->mm_pool;
-    int chunk_idx= 0;
-    for (chunk_idx; chunk_idx < mm->num_chunks ;chunk_idx++){
-      //set the current chunk_idx
-      *(int*) curr_chunk_ptr= chunk_idx;
-      //set the next available chunk idx
-      *(int*) (curr_chunk_ptr+4) = chunk_idx+1;
-      curr_chunk_ptr =curr_chunk_ptr+ mm->act_chunk_size;
-    }
-    *(int*) (curr_chunk_ptr-mm->act_chunk_size +4) =-1;
-    return 0;  /* TODO - return the right value */
-  }
-  else{
-    fprintf(stderr, "The size of memory allocation requested is larger than %d bytes\n", CHUNK_SIZE*NUM_CHUNKS);
-    exit(-1);
-  }
-}
+  int i;
 
-/*
-TODO - Implement to get a chunk of memory (pointer to void), NULL on failure
-*/
+  int statuses[hm];
+	 mm->size_of_chunks = sz;
+	 mm->number_of_chunks = hm;
+	 mm->status = statuses;
+	for(i=0;i<hm;i++)
+		mm->status[i]=0;
+	if ((mm->memory_ptr  = (void*)malloc(mm->number_of_chunks * mm->size_of_chunks))==NULL){
+    //error creating memory SET ERRNO
+    fprintf(stderr, "%s\n", strerror(errno));
+    return -1;
+  }
+	return 0;
+
+
+
+  }
+  /*If hm*sz size memory dynamically created sucessfully:
+  assign status and memory array to the memory manager*/
+  //mm->memory_ptr = Allocated Memory;
+  //mm->status= statuses;
+  //return 0;
+//}
+
+
 void *mm_get(mm_t *mm) {
-  //no more memory available to allocate
-  if (mm->header==-1 ){
-    fprintf(stderr, "No more memory available to allocate\n");
-    return NULL;
+  int i;
+  /*Search the status of each chunk to find next free chunk*/
+  for (i = 0; i < mm->number_of_chunks; i++) {
+      if (mm->status[i]==0){
+        mm->status[i]=1;
+        return mm->memory_ptr+(i*mm->size_of_chunks);
+      }
   }
-  //obtain the next available chunk and reset the header
-  void* alloc_chunk = mm->mm_pool + mm->act_chunk_size*mm->header+4*2;
-  mm->header = *(int*) (mm->mm_pool+ mm->act_chunk_size*mm->header+4);
-  return alloc_chunk;
+  return NULL;
 }
 
-/*
-TODO - Implement to give back ‘chunk’ to the memory manager, don’t free it though!
-*/
 void mm_put(mm_t *mm, void *chunk) {
-  //"insert" received chunk, then update received chunk's next linked chunk as well as the header
-  *(int*) (chunk-4) =  mm->header;
-  mm->header = *(int*) (chunk-8);
+  int i;
+  //int chunk_address = chunk;
+  int found = 0;
+  for (i=0; i<(mm->number_of_chunks); i++){
+    if (chunk == mm->memory_ptr+(i*mm->size_of_chunks)){
+      mm->status[i] = 0;
+      found = 1;
+      break;
+    }
+  }
+  //Mismatched address. Chunk not found!
+  if (!found){
+    fprintf(stderr, "Chunk at address  not found!");
+  }
+
+
 }
 
-/*
-TODO - Implement to release all memory back to the system
-*/
+
 void mm_release(mm_t *mm) {
-  free(mm->mm_pool);
-  free(mm);
-}
-
-/*
- * TODO - This is just an example of how to use the timer.  Notice that
- * this function is not included in mm_public.h, and it is defined as static,
- * so you cannot call it from other files.  Instead, just follow this model
- * and implement your own timing code where you need it.
- */
-static void timer_example() {
-  struct timeval time_s, time_e;
-
-  /* start timer */
-  gettimeofday (&time_s, NULL);
-
-  /* TODO - code you wish to time goes here */
-
-  gettimeofday(&time_e, NULL);
-
-  fprintf(stderr, "Time taken = %f msec\n",
-          comp_time(time_s, time_e) / 1000.0);
+  free(mm->memory_ptr);
+  mm->status  = NULL;
+  mm->size_of_chunks = 0;
+  mm->number_of_chunks = 0;
 }

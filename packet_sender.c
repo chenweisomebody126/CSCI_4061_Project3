@@ -1,6 +1,12 @@
 
 #include <time.h>
 #include "packet.h"
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <string.h>
+#include <errno.h>
 
 static int pkt_cnt = 0;     /* how many packets have been sent for current message */
 static int pkt_total = 1;   /* how many packets to send for the message */
@@ -105,17 +111,17 @@ int main(int argc, char **argv) {
   struct sigaction act;
 
   /* TODO Create a message queue */
-  if (msqid =msgget((key_t) key, 06660| IPC_CREAT )==-1){
-    fprintf(stderr, "fail to creat a message queue with key %d\n", key);
+  if (msqid =msgget((key_t) key,IPC_CREAT | 0660 )==-1){
+    fprintf(stderr, "failed to create a message queue with key %d\n", key);
     exit(-1);
   }
   /*  TODO read the receiver pid from the queue and store it for future use*/
-  pid_queue_msg* pid_msg;
-  if ((msgrcv(msqid, (void *) pid_msg, sizeof(pid_queue_msg), 1,0))==-1){
-    fprintf(stderr, "fail to receive pkt message from message queue\n");
+  pid_queue_msg pid_msg;
+  if ((msgrcv(msqid, (void *) &pid_msg, sizeof(pid_queue_msg), QUEUE_MSG_TYPE,0660))==-1){
+    fprintf(stderr, "failed to receive pkt message from message queue\n");
     exit(-1);
   }
-  receiver_pid = pid_msg->pid;
+  receiver_pid = pid_msg.pid;
 
   printf("Got pid : %d\n", receiver_pid);
 
@@ -126,7 +132,7 @@ int main(int argc, char **argv) {
    */
    sigfillset(&act.sa_mask);
    act.sa_handler = packet_sender;
-   sigaction(SIGALARM, &act, NULL);
+   sigaction(SIGALRM, &act, NULL);
   /*
    * TODO - turn on alarm timer ...
    * use  INTERVAL and INTERVAL_USEC for sec and usec values

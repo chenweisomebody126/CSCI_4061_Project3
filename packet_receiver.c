@@ -5,9 +5,9 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <string.h>
+#include <errno.h>
 
 int msqid = -1;
-int msgflg = 06660; /* msgflg to be passed to msgget() */
 
 static message_t message;   /* current message structure */
 static mm_t mm;             /* memory manager will allocate memory for packets */
@@ -34,8 +34,8 @@ static void packet_handler(int sig) {
 
 
   // TODO get the "packet_queue_msg" from the queue.
-  if(msgrcv(msgid, (void*)&msg_pkt, sizeof(packet_queue_msg), PKT_MSG_TYPE, 0))==-1){
-    fprintf(stderr, "Failed to receive packet from message queue %s\n", strerr(errno));
+  if((msgrcv(msqid, (void*)&msg_pkt, sizeof(packet_queue_msg), QUEUE_MSG_TYPE, 0))==-1){
+    fprintf(stderr, "Failed to receive packet from message queue %s\n", strerror(errno));
     exit(-1);
   }
 
@@ -44,7 +44,7 @@ static void packet_handler(int sig) {
   pkt_total = pkt.how_many;
   pkt_cnt++;
   message.num_packets = pkt_cnt;
-  memcpy(chunk, (void)*pkt, sizeof(pkt));
+  memcpy(chunk, &pkt, sizeof(packet_t));
   message.data[pkt.which] = chunk;
 }
 
@@ -56,14 +56,14 @@ static char *assemble_message() {
 
   char *msg;
   int i;
-  packet_t temp_pkt;
+  packet_t *temp_pkt;
   int msg_len = message.num_packets * sizeof(data_t);
 
   /* TODO - Allocate msg and assemble packets into it */
   msg = (char*)malloc(sizeof(char) * (msg_len+1));
   for (i=0; i<message.num_packets; i++){
     temp_pkt = message.data[i];
-    memcpy(msg+i, temp_pkt.data, sizeof(temp_pkt.data));
+    memcpy(msg+i, temp_pkt->data, sizeof(data_t));
   }
   msg[msg_len]='\0';
 
@@ -90,9 +90,9 @@ int main(int argc, char **argv) {
   message.num_packets = 0;
 
   /* TODO initialize msqid to send pid and receive messages from the message queue. Use the key in packet.h */
-  if ((msqid = msgget(key,msgflg|IPC_CREAT))<0){
+  if ((msqid = msgget(key, IPC_CREAT | 0660))==-1){
     //Couldn't create message queue or get identifier
-    fprintf(stderr, "Failed to create message queue or retrieve queue identifier. %s\n", strerr(errno));
+    fprintf(stderr, "Failed to get message queue. %s\n", strerror(errno));
     exit(-1);
   }
   /* TODO send process pid to the sender on the queue */
@@ -100,9 +100,9 @@ int main(int argc, char **argv) {
   receiver_pid.mtype = QUEUE_MSG_TYPE;
   receiver_pid.pid = getpid();
 
-  if ((msgsnd(msqid, (void*)&receiver_pid, sizeof(pid_queue_msg),msgflg))<0){
+  if ((msgsnd(msqid, (void*)&receiver_pid, sizeof(pid_queue_msg),0660))<0){
     //Error sending pid to the sender
-    fprintf(stderr,"Failed to send reciever's pid to sender. %s\n", strerr(errno));
+    fprintf(stderr,"Failed to send reciever's pid to sender. %s\n", strerror(errno));
     exit(-1);
   }
 
@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
   act.sa_handler = packet_handler;
   sigfillset(&act.sa_mask);
   if (sigaction(SIGIO, &act, NULL)<0){
-    fprintf(stderr, "Failed to set SIGIO. %s\n", strerr(errno));
+    fprintf(stderr, "Failed to set SIGIO. %s\n", strerror(errno));
   }
 
 
@@ -134,7 +134,7 @@ int main(int argc, char **argv) {
   mm_release(&mm);
   // TODO remove the queue once done
   if (msgctl(msqid, IPC_RMID, NULL)<0){
-    fprintf(stderr, "Failed to remove message queue. %s\n", strerr(errno));
+    fprintf(stderr, "Failed to remove message queue. %s\n", strerror(errno));
   }
   return EXIT_SUCCESS;
 }
