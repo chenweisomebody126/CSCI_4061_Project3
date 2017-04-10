@@ -109,19 +109,20 @@ int main(int argc, char **argv) {
 
   struct itimerval interval;
   struct sigaction act;
-
+fprintf(stderr, "Key for queue is %d\n", key );
   /* TODO Create a message queue */
-  if (msqid =msgget((key_t) key,IPC_CREAT | 0660 )==-1){
+  if ((msqid =msgget(key,IPC_CREAT | 0666))==-1){
     fprintf(stderr, "failed to create a message queue with key %d\n", key);
     exit(-1);
   }
+  fprintf(stderr, "Message queue created/retreived with id of: %d\n", msqid);
   /*  TODO read the receiver pid from the queue and store it for future use*/
-  pid_queue_msg* pid_msg;
-  if ((msgrcv(msqid, (void *) &pid_msg, sizeof(pid_queue_msg), QUEUE_MSG_TYPE,0660))==-1){
-    fprintf(stderr, "failed to receive pkt message from message queue\n");
+  pid_queue_msg pid_msg;
+  if ((msgrcv(msqid, (void*)&pid_msg, sizeof(pid_queue_msg), QUEUE_MSG_TYPE,0))==-1){
+    fprintf(stderr, "failed to receive pkt message from message queue. %s\n", strerror(errno));
     exit(-1);
   }
-  receiver_pid = pid_msg->pid;
+  receiver_pid = pid_msg.pid;
 
   printf("Got pid : %d\n", receiver_pid);
 

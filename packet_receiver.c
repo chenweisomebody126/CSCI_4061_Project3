@@ -89,18 +89,20 @@ int main(int argc, char **argv) {
   mm_init(&mm, NUM_CHUNKS, CHUNK_SIZE);
   message.num_packets = 0;
 
+fprintf(stderr, "Key for queue is %d\n", key );
   /* TODO initialize msqid to send pid and receive messages from the message queue. Use the key in packet.h */
-  if ((msqid = msgget(key, IPC_CREAT | 0660))==-1){
+  if ((msqid = msgget(key, IPC_CREAT | 0666))==-1){
     //Couldn't create message queue or get identifier
     fprintf(stderr, "Failed to get message queue. %s\n", strerror(errno));
     exit(-1);
   }
+  fprintf(stderr, "Message queue created/retreived with id of: %d\n", msqid);
   /* TODO send process pid to the sender on the queue */
   pid_queue_msg receiver_pid;
   receiver_pid.mtype = QUEUE_MSG_TYPE;
   receiver_pid.pid = getpid();
 
-  if ((msgsnd(msqid, (void*)&receiver_pid, sizeof(pid_queue_msg),0660))<0){
+  if ((msgsnd(msqid, (void*)&receiver_pid, sizeof(pid_queue_msg),0666))==-1){
     //Error sending pid to the sender
     fprintf(stderr,"Failed to send reciever's pid to sender. %s\n", strerror(errno));
     exit(-1);
