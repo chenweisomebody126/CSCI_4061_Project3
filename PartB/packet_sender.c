@@ -79,18 +79,20 @@ static void packet_sender(int sig) {
   pkt_cnt++;
   pkt_total =pkt.how_many;
 
-  // TODO Create a packet_queue_msg for the current packet.
+  //Create a packet_queue_msg for the current packet.
   packet_queue_msg pkt_msg;
   pkt_msg.pkt =  pkt;
   pkt_msg.mtype = QUEUE_MSG_TYPE;
-  // TODO send this packet_queue_msg to the receiver. Handle any error appropriately.
+
+  //send this packet_queue_msg to the receiver. Handle message send error.
   if (msgsnd(msqid, (void*)&pkt_msg,sizeof(packet_queue_msg),0)==-1){
-    fprintf(stderr, "fail to send packet_queue_msg to message queue \n");
+    fprintf(stderr, "Failed to send packet_queue_msg to message queue: %s\n", strerror(errno));
     exit(-1);
   }
-  // TODO send SIGIO to the receiver if message sending was successful.
+  /*send SIGIO to the receiver if message sending was successful.
+  This alerts receiver to receive message from queue.*/
   if (kill(receiver_pid, SIGIO)==-1){
-    fprintf(stderr, "fail to send SIGIO to receiver_pid %d \n", receiver_pid);
+    fprintf(stderr, "Failed to send SIGIO to receiver_pid %d: %s\n", receiver_pid, strerror(errno));
     exit(-1);
   }
   return;
@@ -107,37 +109,40 @@ int main(int argc, char **argv) {
   srand(time(NULL)); /* seed for random number generator */
 
   int i;
-
   struct itimerval interval;
   struct sigaction act;
+
   /* Create a message queue */
   if ((msqid =msgget(key,IPC_CREAT | 0666))==-1){
-    fprintf(stderr, "failed to create a message queue with key %d\n", key);
+    fprintf(stderr, "Failed to create/get message queue: %s\n", strerror(errno));
     exit(-1);
   }
-  fprintf(stderr,"Waiting for receiver pid.\n");
+  fprintf(stderr,"Waiting for receiver pid...\n");
+
   /*  read the receiver pid from the queue and store it for future use*/
   pid_queue_msg pid_msg;
   if ((msgrcv(msqid, (void*)&pid_msg, sizeof(pid_queue_msg), QUEUE_MSG_TYPE,0))==-1){
-    fprintf(stderr, "failed to receive pkt message from message queue. %s\n", strerror(errno));
+    fprintf(stderr, "failed to receive pkt message from message queue: %s\n", strerror(errno));
     exit(-1);
   }
   receiver_pid = pid_msg.pid;
 
   printf("Got pid : %d\n", receiver_pid);
 
-  /* TODO - set up alarm handler -- mask all signals within it */
+  /* set up alarm handler -- mask all signals within it */
   /* The alarm handler will get the packet and send the packet to the receiver. Check packet_sender();
    * Don't care about the old mask, and SIGALRM will be blocked for us anyway,
    * but we want to make sure act is properly initialized.
    */
-   sigfillset(&act.sa_mask);
+   if (sigfillset(&act.sa_mask)==-1){
+     fprintf(stderr, "Failed to initialize signal set: %s\n", strerror(errno));
+   }
    act.sa_handler = packet_sender;
    if (sigaction(SIGALRM, &act, NULL)<0){
-     fprintf(stderr, "Failed to set SIGALRM. %s\n", strerror(errno));
+     fprintf(stderr, "Failed to set SIGALRM: %s\n", strerror(errno));
    }
   /*
-   * TODO - turn on alarm timer ...
+   * turn on alarm timer ...
    * use  INTERVAL and INTERVAL_USEC for sec and usec values
   */
   interval.it_interval.tv_sec = INTERVAL;
@@ -145,7 +150,9 @@ int main(int argc, char **argv) {
   interval.it_value.tv_sec = INTERVAL;
   interval.it_value.tv_usec = INTERVAL_USEC;
   /* And the timer */
-  setitimer(ITIMER_REAL, &interval, NULL);
+  if (setitimer(ITIMER_REAL, &interval, NULL)==-1){
+    fprintf(stderr, "Failed to set timer: %s\n", strerror(errno));
+  }
 
   /* NOTE: the below code wont run now as you have not set the SIGALARM handler. Hence,
      set up the SIGALARM handler and the timer first. */
