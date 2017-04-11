@@ -143,6 +143,7 @@ fprintf(stderr, "SIGIO handler setup.\n");
   for (i = 1; i <= k; i++) {
     while (pkt_cnt < pkt_total) {
       pause(); /* block until next packet */
+      fprintf(stderr, "for loop is i=%d, k=%d\n", i, k);
     }
 
     msg = assemble_message();
