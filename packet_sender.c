@@ -134,7 +134,9 @@ fprintf(stderr, "Key for queue is %d\n", key );
    */
    sigfillset(&act.sa_mask);
    act.sa_handler = packet_sender;
-   sigaction(SIGALRM, &act, NULL);
+   if (sigaction(SIGALRM, &act, NULL)<0){
+     fprintf(stderr, "Failed to set SIGALRM. %s\n", strerror(errno));
+   }
   /*
    * TODO - turn on alarm timer ...
    * use  INTERVAL and INTERVAL_USEC for sec and usec values
