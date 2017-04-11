@@ -110,22 +110,21 @@ int main(int argc, char **argv) {
   mm_init(&mm, NUM_CHUNKS, CHUNK_SIZE);
   message.num_packets = 0;
 
-fprintf(stderr, "Key for queue is %d\n", key );
   /* TODO initialize msqid to send pid and receive messages from the message queue. Use the key in packet.h */
   if ((msqid = msgget(key, IPC_CREAT | 0666))==-1){
     //Couldn't create message queue or get identifier
     fprintf(stderr, "Failed to get message queue. %s\n", strerror(errno));
     exit(-1);
   }
-  fprintf(stderr, "Message queue created/retreived with id of: %d\n", msqid);
+
   /* TODO send process pid to the sender on the queue */
   pid_queue_msg receiver_pid;
   receiver_pid.mtype = QUEUE_MSG_TYPE;
   receiver_pid.pid = getpid();
-
+  fprintf(stderr, "Sending pid: %d\n", receiver_pid.pid);
   if ((msgsnd(msqid, (void*)&receiver_pid, sizeof(pid_queue_msg),0666))==-1){
     //Error sending pid to the sender
-    fprintf(stderr,"Failed to send reciever's pid to sender. %s\n", strerror(errno));
+    fprintf(stderr,"Failed to send pid to sender. %s\n", strerror(errno));
     exit(-1);
   }
 
@@ -136,7 +135,6 @@ fprintf(stderr, "Key for queue is %d\n", key );
   if (sigaction(SIGIO, &act, NULL)<0){
     fprintf(stderr, "Failed to set SIGIO. %s\n", strerror(errno));
   }
-fprintf(stderr, "SIGIO handler setup.\n");
 
   for (i = 1; i <= k; i++) {
     while (pkt_cnt < pkt_total) {

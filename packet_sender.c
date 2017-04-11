@@ -110,14 +110,13 @@ int main(int argc, char **argv) {
 
   struct itimerval interval;
   struct sigaction act;
-fprintf(stderr, "Key for queue is %d\n", key );
-  /* TODO Create a message queue */
+  /* Create a message queue */
   if ((msqid =msgget(key,IPC_CREAT | 0666))==-1){
     fprintf(stderr, "failed to create a message queue with key %d\n", key);
     exit(-1);
   }
-  fprintf(stderr, "Message queue created/retreived with id of: %d\n", msqid);
-  /*  TODO read the receiver pid from the queue and store it for future use*/
+  fprintf(stderr,"Waiting for receiver pid.\n");
+  /*  read the receiver pid from the queue and store it for future use*/
   pid_queue_msg pid_msg;
   if ((msgrcv(msqid, (void*)&pid_msg, sizeof(pid_queue_msg), QUEUE_MSG_TYPE,0))==-1){
     fprintf(stderr, "failed to receive pkt message from message queue. %s\n", strerror(errno));
@@ -141,10 +140,10 @@ fprintf(stderr, "Key for queue is %d\n", key );
    * TODO - turn on alarm timer ...
    * use  INTERVAL and INTERVAL_USEC for sec and usec values
   */
-  interval.it_interval.tv_sec = 1;
-  interval.it_interval.tv_usec =0;
-  interval.it_value.tv_sec = 0;
-  interval.it_value.tv_usec = 100;
+  interval.it_interval.tv_sec = INTERVAL;
+  interval.it_interval.tv_usec =INTERVAL_USEC;
+  interval.it_value.tv_sec = INTERVAL;
+  interval.it_value.tv_usec = INTERVAL_USEC;
   /* And the timer */
   setitimer(ITIMER_REAL, &interval, NULL);
 
