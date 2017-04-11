@@ -27,12 +27,13 @@ static void packet_handler(int sig) {
   packet_t pkt;
   void *chunk;
   packet_queue_msg msg_pkt;
+  fprintf(stderr, "pkt  \n");
 
   if ((chunk = mm_get(&mm))==NULL){
       fprintf(stderr, "Failed to get memory chunk from memory manager.\n");
   }
   fprintf(stderr, "Got mem chunk.\n");
-
+/*
   // TODO get the "packet_queue_msg" from the queue.
   if((msgrcv(msqid, (void*)&msg_pkt, sizeof(packet_queue_msg), QUEUE_MSG_TYPE, 0))==-1){
     fprintf(stderr, "Failed to receive packet from message queue %s\n", strerror(errno));
@@ -42,15 +43,32 @@ static void packet_handler(int sig) {
   // TODO extract the packet from "packet_queue_msg" and store it in the memory from memory manager
   pkt = msg_pkt.pkt;
   pkt_total = pkt.how_many;
-  int packet_num = pkt.which;
   pkt_cnt++;
   message.num_packets = pkt_cnt;
-  //memcpy(chunk, &pkt.data, sizeof(data_t));
-  memcpy(chunk, &pkt.data, sizeof(PACKET_SIZE));
+  fprintf(stderr, "chunk size is %d\n", (int)sizeof(chunk));
+  //fprintf(stderr, "chunk address is %d\n", chunk->which);
 
-  message.data[packet_num] = chunk;
+  message.data[pkt.which] = chunk;
+  memcpy((struct packet_t*) chunk, &pkt, sizeof(packet_t));
+  fprintf(stderr, "chunk size is %d\n", (int)sizeof(chunk));
+
+  //fprintf(stderr, "chunk address is %d\n", chunk->which);
+  fprintf(stderr, "size of packet is %d\n", (int)sizeof(packet_t));
   fprintf(stderr, "pkt is:  data= %s \n", pkt.data);
-
+*/
+// TODO get the "packet_queue_msg" from the queue.
+  if((msgrcv(msqid, (void*)chunk, sizeof(packet_queue_msg), QUEUE_MSG_TYPE, 0))==-1){
+    fprintf(stderr, "Failed to receive packet from message queue %s\n", strerror(errno));
+    exit(-1);
+  }
+// TODO extract the packet from "packet_queue_msg" and store it in the memory from memory manager
+  pkt =((packet_queue_msg*) chunk)->pkt;
+  pkt_total = pkt.how_many;
+  pkt_cnt++;
+  message.num_packets = pkt_cnt;
+  memcpy(chunk, &pkt, sizeof(packet_t));
+  message.data[pkt.which] = chunk;
+  fprintf(stderr, "pkt is:  data= %s \n", pkt.data);
 }
 
 /*
