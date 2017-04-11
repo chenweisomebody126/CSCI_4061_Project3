@@ -71,13 +71,13 @@ static void packet_sender(int sig) {
   packet_t pkt;
 
   pkt = get_packet();
-  fprintf(stderr, "%s\n", pkt.data);
   // temp is just used for temporarily printing the packet.
   char temp[PACKET_SIZE + 2];
   strcpy(temp, pkt.data);
   temp[3] = '\0';
   printf ("Sending packet: %s\n", temp);
   pkt_cnt++;
+  pkt_total =pkt.how_many;
 
   // TODO Create a packet_queue_msg for the current packet.
   packet_queue_msg pkt_msg;
