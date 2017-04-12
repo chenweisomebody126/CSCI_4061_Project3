@@ -6,15 +6,15 @@
 
 #define INTERVAL 0
 #define INTERVAL_USEC 50000
-#define CHUNK_SIZE 64
+#define CHUNK_SIZE 1
 #define NUM_CHUNKS 1000
 
 /* TODO - Fill this in */
 typedef struct {
-  int *status; //False is free True is taken
+  int count;
   int size_of_chunks;
   int number_of_chunks;
-  void *memory_ptr; //poiter to array of chunks
+  void **memory_ptr; //poiter to array of chunks
 } mm_t;
 
 /* TODO - Implement these in mm.c */
