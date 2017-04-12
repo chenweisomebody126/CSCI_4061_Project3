@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
 
   // deallocate memory manager
   mm_release(&mm);
-  // TODO remove the queue once done
+  //  remove the queue once done
   if (msgctl(msqid, IPC_RMID, NULL)==-1){
     fprintf(stderr, "Failed to remove message queue: %s\n", strerror(errno));
   }
