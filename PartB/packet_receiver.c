@@ -1,3 +1,7 @@
+/* CSCI4061 S2017 Assignment 3 * login: patte5392umn.edu
+* date: 4/12/17 * section: 1  
+* name: Christopher Patterson, Sushmitha Ayyanar, Wei Chen
+* id: patte539, ayyan003, chen4626 */
 
 #include "packet.h"
 #include <sys/ipc.h>
