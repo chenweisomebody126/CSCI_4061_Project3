@@ -86,7 +86,7 @@ static char *assemble_message() {
 
 int main(int argc, char **argv) {
   if (argc != 2) {
-    printf("Usage: packet_sender <num of messages to receive>\n");
+    printf("Usage: packet_receiver <num of messages to receive>\n");
     exit(-1);
   }
 
