@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
   mm_init(&mm, NUM_CHUNKS, CHUNK_SIZE);
   message.num_packets = 0;
 
-  /*TODO - Solutions have send pid fail if sender isn't already running!!??
+  /* Solutions have send pid fail if sender isn't already running!!??
   initialize msqid to send pid and receive messages from the message queue. Use the key in packet.h */
   if ((msqid = msgget(key, IPC_CREAT | 0666))==-1){
     //Couldn't create message queue or get identifier
@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  // TODO deallocate memory manager
+  // deallocate memory manager
   mm_release(&mm);
   // TODO remove the queue once done
   if (msgctl(msqid, IPC_RMID, NULL)==-1){
