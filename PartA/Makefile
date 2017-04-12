@@ -1,4 +1,4 @@
-all: main_mm
+all: test
 	echo 'Made main'
 
 test: mm.o main_mm.c
