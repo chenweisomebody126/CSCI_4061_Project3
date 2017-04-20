@@ -26,8 +26,9 @@ In this project, we mainly work with dynamic memory allocation and delocation. H
 We further test and compare the memory manager with the case of directly using malloc, and we find that our implementation overcomes the problems with malloc
 
 4.Work Distribution:
-Sushmitha - mm_init, mm_get, mm_put and the timer functions
-Christopher - mm_release, idea of using a double pointer for stack implementation
+Sushmitha - mm_init, mm_get, mm_put and the timer functions			
+Christopher - mm_release, idea of using a double pointer for stack implementation			
+Wei -- 	mm_init, mm_get, mm_put using linked list for stack implementation			
 
 ||Part B||
  
@@ -46,5 +47,6 @@ Navigate to ./PATH/Project3/PartB
 *Receiver: The receiver establishes a connection with a sender using message queues and then waits for the sender to initiate message transfers using packets. The packets for a given message are not assumed to come in order. The packets are assembled and the receiver displays all the messages it receives to the terminal as they come in. 
    
 4. Contributions:
-Wei handled coding and error handling for sender and Chris handled coding and error handling for receiver. The memory manager used was from PartA.
+Wei handled coding and error handling for sender and debug the reciever.
+Chris handled coding and error handling for receiver. The memory manager used was from PartA.
 
